@@ -10,6 +10,7 @@ import java.awt.Color;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import javax.swing.JOptionPane;
+import MODELO.*;
 
 /**
  *
@@ -24,6 +25,8 @@ public class Login extends javax.swing.JFrame {
     public Login() {
         initComponents();
         this.setLocationRelativeTo(null);
+        //Establece textos fantasmas en los text Fiels, lo que hace que
+        // el usuario entienda mejor el programa
         TextPrompt tfU = new TextPrompt("Ingrese su nombre de usuario",usu);
         TextPrompt tfC = new TextPrompt("Ingrese su Contraseña",con);
         ojo.setVisible(false);    
@@ -78,15 +81,15 @@ public class Login extends javax.swing.JFrame {
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 50, -1, -1));
 
         jLabel3.setFont(new java.awt.Font("Roboto Medium", 0, 18)); // NOI18N
-        jLabel3.setText("Nombre de la empresa");
-        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(590, 170, -1, -1));
+        jLabel3.setText("CONCORDIA");
+        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 170, -1, -1));
 
         jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/IMAGENES/city.png"))); // NOI18N
         jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 0, 290, 500));
 
         jLabel4.setFont(new java.awt.Font("Roboto Black", 0, 24)); // NOI18N
         jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/IMAGENES/og.png"))); // NOI18N
-        jLabel4.setText("Eslogan");
+        jLabel4.setText("JUNTOS HACIA LA VICTORIA");
         jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 60, -1, -1));
 
         jLabel5.setFont(new java.awt.Font("Roboto Black", 0, 24)); // NOI18N
@@ -259,6 +262,8 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_bEntrarMouseExited
 
     private void conKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_conKeyPressed
+        //AL dar ENTER se cambia a otro text Fiel que este aun vacio, si no
+        //Ejecuta el log-in para entrar
         ojo.setVisible(true);
         if(evt.getExtendedKeyCode() == KeyEvent.VK_ENTER && !(usu.getText().isEmpty())){
             entrar();
@@ -269,14 +274,17 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_conKeyPressed
 
     private void ojoMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ojoMousePressed
+        //Cambia a letras la contraseña
         con.setEchoChar((char)0);
     }//GEN-LAST:event_ojoMousePressed
 
     private void ojoMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_ojoMouseReleased
+        //cambia a astericos la contraseña
         con.setEchoChar('*');
     }//GEN-LAST:event_ojoMouseReleased
 
     private void bEntrarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_bEntrarMouseClicked
+        //Ejecuta el metodo pa entrar 
         entrar();
     }//GEN-LAST:event_bEntrarMouseClicked
 
@@ -285,6 +293,8 @@ public class Login extends javax.swing.JFrame {
     }//GEN-LAST:event_usuKeyTyped
 
     private void usuKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_usuKeyPressed
+        //AL dar ENTER se cambia a otro text Fiel que este aun vacio, si no
+        //Ejecuta el log-in para entrar
         if(evt.getExtendedKeyCode() == KeyEvent.VK_ENTER && !(con.getText().isEmpty())){
             entrar();
             
@@ -293,19 +303,49 @@ public class Login extends javax.swing.JFrame {
             
         }
     }//GEN-LAST:event_usuKeyPressed
-
+    /**
+     * Realiza la verificacion de usuarios en caso de que sea 
+     * - admin || admin-> habre la pestaña de creacion de usuarios (Secreta)
+     * 
+     * En caso de tener el rol ADMINISTRADOR -> abre la vista tabla 
+     * En caso de tener el rol TRABAJADOR -> abre la vista vTrabajador 
+     * En caso de tener el rol MECANICO -> indica que no tiene permisos para usar la aplicacion
+     * En caso de no ser ninguno limpia los campos e infica que son incorrectos
+     */
     public void entrar(){
         if(usu.getText().equals("admin")&&con.getText().equals("admin")){
-            JOptionPane.showMessageDialog(null, "Bienvenido");
-            tabla tb = new tabla();
+            JOptionPane.showMessageDialog(null, "Zona privada");
+            addTrabajador tb = new addTrabajador();
             tb.setVisible(true);
             dispose();
-        }else if(!"admin".equals(usu.getText()) && con.getText().equals("admin")) {
-            JOptionPane.showMessageDialog(null, "Usuario incorrecto");
-            usu.setText(null);
-        }else if(!"admin".equals(con.getText()) && usu.getText().equals("admin")){
-            JOptionPane.showMessageDialog(null, "Contraseña incorrecta");  
-            con.setText(null);
+        }else{
+            LoginLogica im = new LoginLogica();
+            usuarioDAO ud = im.login(usu.getText().trim(), con.getText().trim());
+            if(!(ud == null)){
+                if(ud.getRol()==1){
+                    JOptionPane.showMessageDialog(null, "Bienvenido "+ud.getNombreUsuario());
+                    tabla tb = new tabla();
+                    tb.setVisible(true);
+                    dispose();
+                }else if (ud.getRol()==2){
+                    JOptionPane.showMessageDialog(null, "Bienvenido "+ud.getNombreUsuario());
+                    vTrabajador tb = new vTrabajador();
+                    tb.setVisible(true);
+                    tb.label(ud.getNombreUsuario(), 1);
+                    dispose();
+                }else{
+                    JOptionPane.showMessageDialog(null, "No tiene permisos para acceder");
+                    usu.setText("");
+                    con.setText("");
+                }
+                
+            }else{
+                JOptionPane.showMessageDialog(null, "Usuario o contraseña incorrectos");
+                usu.setText("");
+                con.setText("");
+            }
+                      
+            
         }
     }
     /**
